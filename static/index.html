@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Vika Voice Agent</title>
+    <style>
+        body { background: #0f172a; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        .orb { width: 150px; height: 150px; background: radial-gradient(circle, #6366f1 0%, #4338ca 100%); border-radius: 50%; box-shadow: 0 0 50px #6366f1; transition: 0.3s; }
+        .active { animation: pulse 1s infinite alternate; }
+        @keyframes pulse { from { transform: scale(1); box-shadow: 0 0 20px #6366f1; } to { transform: scale(1.1); box-shadow: 0 0 60px #818cf8; } }
+        button { margin-top: 30px; padding: 12px 24px; border-radius: 8px; border: none; background: #6366f1; color: white; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div id="orb" class="orb"></div>
+    <button id="startBtn" onclick="toggle()">Start Conversation</button>
+
+    <script>
+        const ws = new WebSocket(`ws://${window.location.host}/voice`);
+        const orb = document.getElementById('orb');
+        let recognition;
+
+        function toggle() {
+            orb.classList.add('active');
+            window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.interimResults = false;
+            
+            recognition.onresult = (e) => {
+                const text = e.results[0][0].transcript;
+                ws.send(text); // Send transcript to FastAPI
+            };
+            
+            recognition.onend = () => recognition.start(); // Keep listening
+            recognition.start();
+        }
+
+        ws.onmessage = (e) => {
+            const audioData = e.data;
+            const audio = new Audio("data:audio/wav;base64," + audioData);
+            audio.play();
+        };
+    </script>
+</body>
+</html>
