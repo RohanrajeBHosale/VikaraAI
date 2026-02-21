@@ -1,4 +1,8 @@
 fastapi
 uvicorn
+openai
+websockets
 google-api-python-client
 google-auth-oauthlib
+python-dotenv
+requests
